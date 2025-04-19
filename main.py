@@ -70,10 +70,35 @@ def show_notes():
 
     note_ids = []                                            # Seçilen notların ID'sini takip etmek için liste
 
+    # Listbox'a notları yaz
     for note in notes:                                       # Her not için satır ekle
         note_id, title, content, created_at = note
         listbox.insert(tk.END, f"🕒 {created_at} | {title}")  # Listbox'a notları ekle
         note_ids.append(note_id)                             # ID'leri sırayla listeye kaydet
+
+    # Notu silen fonksiyon
+    def delete_selected_note():
+        selection = listbox.curselection()  # Seçilen satır
+        if selection:
+            index = selection[0]
+            selected_id = note_ids[index]   # O satırın ID’si
+
+            confirm = messagebox.askyesno("Onay", "Bu notu silmek istediğine emin misin?")
+            if confirm:
+                # Veritabanından sil
+                conn = sqlite3.connect("notlar.db")
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM notes WHERE id = ?", (selected_id,))
+                conn.commit()
+                conn.close()
+
+                # Listbox’tan kaldır
+                listbox.delete(index)
+                note_ids.pop(index)  # ID listemizi de güncelle
+
+                messagebox.showinfo("Silindi", "Not başarıyla silindi.")
+        else:
+            messagebox.showwarning("Uyarı", "Lütfen silmek için bir not seç.")
 
     # Çift tıklanınca detaylı görüntüleme
     def on_note_select(event):
@@ -104,7 +129,8 @@ def show_notes():
             content_text.pack(padx=10, pady=10)
 
     listbox.bind("<Double-1>", on_note_select)               # Çift tıklama olayını bağla
-
+    # Silme butonu ekle
+    tk.Button(list_window, text="🗑️ Seçilen Notu Sil", command=delete_selected_note).pack(pady=5)
 
 # Tkinter ile arayüz tasarımı
 root = tk.Tk()                             # Ana pencereyi oluştur
@@ -120,5 +146,7 @@ content_text.pack()
 
 tk.Button(root, text="Kaydet", command=save_note).pack(pady=10)   # Kaydet butonu
 tk.Button(root, text="Notları Görüntüle", command=show_notes).pack(pady=5)  # Notları listeleme butonu
+
+
 
 root.mainloop()  # Arayüzü çalıştır
