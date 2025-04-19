@@ -100,6 +100,65 @@ def show_notes():
         else:
             messagebox.showwarning("Uyarı", "Lütfen silmek için bir not seç.")
 
+    # Seçilen notu güncelleme fonksiyonu
+    def update_selected_note():
+        selection = listbox.curselection()  # Seçilen satır kontrolü
+        if selection:
+            index = selection[0]
+            selected_id = note_ids[index]   # Seçilen notun ID'si
+
+            # Notun mevcut verisini veritabanından al
+            conn = sqlite3.connect("notlar.db")
+            cursor = conn.cursor()
+            cursor.execute("SELECT title, content FROM notes WHERE id = ?", (selected_id,))
+            note = cursor.fetchone()
+            conn.close()
+
+            # Güncelleme penceresi aç
+            update_window = tk.Toplevel(list_window)
+            update_window.title("✏️ Notu Güncelle")
+
+            tk.Label(update_window, text="Yeni Başlık:").pack()
+            title_entry = tk.Entry(update_window, width=50)
+            title_entry.insert(0, note[0])  # Eski başlık
+            title_entry.pack()
+
+            tk.Label(update_window, text="Yeni İçerik:").pack()
+            content_text = tk.Text(update_window, height=10, width=50)
+            content_text.insert(tk.END, note[1])  # Eski içerik
+            content_text.pack()
+
+            # Kaydet butonu (iç içe fonksiyon)
+            def save_updated_note():
+                new_title = title_entry.get()
+                new_content = content_text.get("1.0", tk.END)
+
+                if not new_title.strip():
+                    messagebox.showwarning("Uyarı", "Başlık boş olamaz.")
+                    return
+
+                # Veritabanında güncelle
+                conn = sqlite3.connect("notlar.db")
+                cursor = conn.cursor()
+                cursor.execute("UPDATE notes SET title = ?, content = ? WHERE id = ?",
+                               (new_title, new_content, selected_id))
+                conn.commit()
+                conn.close()
+
+                # Listeden güncelleneni yenile
+                listbox.delete(index)
+                listbox.insert(index, f"🕒 (Güncellendi) | {new_title}")
+                note_ids[index] = selected_id
+
+                update_window.destroy()  # pencereyi kapat
+                messagebox.showinfo("Başarılı", "Not güncellendi.")
+
+            # Kaydet butonunu pencereye ekle
+            tk.Button(update_window, text="Kaydet", command=save_updated_note).pack(pady=5)
+
+        else:
+            messagebox.showwarning("Uyarı", "Güncellemek için bir not seç.")
+
     # Çift tıklanınca detaylı görüntüleme
     def on_note_select(event):
         selection = listbox.curselection()                   # Seçilen satırı bul
@@ -131,6 +190,9 @@ def show_notes():
     listbox.bind("<Double-1>", on_note_select)               # Çift tıklama olayını bağla
     # Silme butonu ekle
     tk.Button(list_window, text="🗑️ Seçilen Notu Sil", command=delete_selected_note).pack(pady=5)
+    # Güncelle Butonu ekleme
+    tk.Button(list_window, text="✏️ Seçilen Notu Güncelle", command=update_selected_note).pack(pady=5)
+
 
 # Tkinter ile arayüz tasarımı
 root = tk.Tk()                             # Ana pencereyi oluştur
