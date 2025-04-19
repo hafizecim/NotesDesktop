@@ -110,6 +110,40 @@ def show_notes():
         # ✅ Kullanıcıya başarı mesajı göster
         messagebox.showinfo("Başarılı", "Notlar 'notlar_export.txt' dosyasına başarıyla aktarıldı.")
 
+        # 📤 NOTLARI .CSV DOSYASINA DIŞA AKTARAN FONKSİYON
+
+    def export_notes_to_csv():
+        import csv  # 📦 csv modülünü kullanıyoruz
+
+        # 💾 Veritabanına bağlan
+        conn = sqlite3.connect("notlar.db")
+        cursor = conn.cursor()
+
+        # 📦 Tüm notları çek (tarih sırasıyla)
+        cursor.execute("SELECT title, content, created_at FROM notes ORDER BY created_at DESC")
+        all_notes = cursor.fetchall()
+        conn.close()
+
+        # ❗ Hiç not yoksa kullanıcıya bilgi ver
+        if not all_notes:
+            messagebox.showinfo("Bilgi", "Dışa aktarılacak not bulunamadı.")
+            return
+
+        # 📁 CSV dosyasını yazmak için açıyoruz
+        with open("notlar_export.csv", "w", newline='', encoding="utf-8") as file:
+            writer = csv.writer(file)
+
+            # 🧱 Başlık satırını yaz
+            writer.writerow(["Tarih", "Başlık", "İçerik"])
+
+            # 🧾 Notları satır satır yaz
+            for note in all_notes:
+                title, content, created_at = note
+                writer.writerow([created_at, title, content])
+
+        # ✅ Kullanıcıya bilgilendirme
+        messagebox.showinfo("Başarılı", "Notlar 'notlar_export.csv' dosyasına başarıyla aktarıldı.")
+
 
     # 🔍 Ara butonu, tıklanınca arama fonksiyonunu çalıştırır
     tk.Button(search_frame, text="Ara", command=search_notes,
@@ -268,6 +302,9 @@ def show_notes():
     # 📤 TXT dışa aktarma butonu → Tıklandığında export_notes_to_txt fonksiyonu çalışır
     tk.Button(list_window, text="📤 Notları TXT Olarak Dışa Aktar", command=export_notes_to_txt,
               bg="#00b894", fg="white", font=("Segoe UI", 10), padx=10).pack(pady=5)
+    # 📤 CSV dışa aktarma butonu → Tıklandığında export_notes_to_txt fonksiyonu çalışır
+    tk.Button(list_window, text="📊 Notları CSV Olarak Aktar", command=export_notes_to_csv,
+              bg="#f9a825", fg="white", font=("Segoe UI", 10, "bold")).pack(pady=5)
 
 # Tkinter ile arayüz tasarımı
 root = tk.Tk()                             # Ana pencereyi oluştur
