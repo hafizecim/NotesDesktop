@@ -18,6 +18,9 @@ from tkinter import messagebox           # Uyarı ve bilgi kutuları için
 from datetime import datetime            # Zaman bilgisi eklemek için
 import sqlite3                           # SQLite veritabanı işlemleri için
 
+# Tema kontrolü için başlangıç değeri - (False = açık tema, True = koyu tema)
+is_dark_mode = False
+
 from database import create_db           # Veritabanı oluşturma fonksiyonunu içe aktar
 
 # Veritabanını oluştur (eğer yoksa)
@@ -47,6 +50,43 @@ def save_note():
     messagebox.showinfo("Başarılı", "Not kaydedildi!")             # Başarılı mesajı
     title_entry.delete(0, tk.END)                                  # Başlığı temizle
     content_text.delete("1.0", tk.END)                             # İçeriği temizle
+
+# 🌗 Tema değiştirme fonksiyonu (koyu <-> açık)
+def toggle_theme():
+    global is_dark_mode  # Tema durumu dış değişken, fonksiyon içinde güncellenecek
+
+    if is_dark_mode:
+        # ☀️ AÇIK TEMA AKTİF OLACAK
+        root.configure(bg="#fff8f0")  # Arka plan: Vanilya kremi
+
+        title_label.config(bg="#fff8f0", fg="#6b4c9a")     # Başlık etiketi: pastel zemin, eflatun yazı
+        content_label.config(bg="#fff8f0", fg="#6b4c9a")   # İçerik etiketi
+
+        title_entry.config(bg="white", fg="#3e3e3e")       # Giriş kutuları: beyaz arka plan, koyu gri yazı
+        content_text.config(bg="white", fg="#3e3e3e")
+
+        save_button.config(bg="#ff6f61", fg="white")       # Kaydet butonu: mercan rengi
+        show_button.config(bg="#4dabf7", fg="white")       # Görüntüle butonu: buz mavisi
+        theme_button.config(text="🌙 Koyu Tema")           # Butonun yazısı değişsin
+
+        is_dark_mode = False                               # Temayı açık olarak güncelle
+
+    else:
+        # 🌑 KOYU TEMA AKTİF OLACAK
+        root.configure(bg="#2c2c2c")                        # Arka plan: koyu gri
+
+        title_label.config(bg="#2c2c2c", fg="#f1c40f")      # Başlık etiketi: koyu zemin, sarı yazı
+        content_label.config(bg="#2c2c2c", fg="#f1c40f")
+
+        title_entry.config(bg="#3c3c3c", fg="white")        # Giriş kutuları: koyu gri, beyaz yazı
+        content_text.config(bg="#3c3c3c", fg="white")
+
+        save_button.config(bg="#8e44ad", fg="white")        # Kaydet butonu: koyu mor
+        show_button.config(bg="#3498db", fg="white")        # Görüntüle: açık mavi
+        theme_button.config(text="☀️ Açık Tema")            # Butonun yazısı değişsin
+
+        is_dark_mode = True                                # Temayı koyu olarak güncelle
+
 
 # NOTLARI GÖRÜNTÜLE BUTONU
 # Notları listeleyen fonksiyon (detay görüntüleme dahil)
@@ -306,27 +346,44 @@ def show_notes():
     tk.Button(list_window, text="📊 Notları CSV Olarak Aktar", command=export_notes_to_csv,
               bg="#f9a825", fg="white", font=("Segoe UI", 10, "bold")).pack(pady=5)
 
+
 # Tkinter ile arayüz tasarımı
 root = tk.Tk()                             # Ana pencereyi oluştur
 root.configure(bg="#fff8f0")  # Arka plan: Vanilya kremi
 root.title("📝 Not Defteri Uygulaması")    # Pencere başlığı
 
-tk.Label(root, text="Başlık:", bg="#fff8f0", fg="#6b4c9a", font=("Segoe UI", 11)).pack()     # Başlık etiketi
-title_entry = tk.Entry(root, width=50, bg="white", fg="#3e3e3e", font=("Segoe UI", 10))    # Başlık girişi
+# 🎨 RENKLİ & REFERANSLI ARAYÜZ ÖĞELERİ
+
+# Başlık etiketi (Label) → isim verdik: title_label
+title_label = tk.Label(root, text="Başlık:", bg="#fff8f0", fg="#6b4c9a", font=("Segoe UI", 11))
+title_label.pack()
+
+# Başlık giriş kutusu
+title_entry = tk.Entry(root, width=50, bg="white", fg="#3e3e3e", font=("Segoe UI", 10))
 title_entry.pack()
 
-tk.Label(root, text="İçerik:", bg="#f7f5f2", font=("Segoe UI", 11)).pack()    # İçerik etiketi
-content_text = tk.Text(root, height=10, width=50, bg="white", fg="#3e3e3e", font=("Segoe UI", 10))  # İçerik kutusu
+# İçerik etiketi
+content_label = tk.Label(root, text="İçerik:", bg="#fff8f0", fg="#6b4c9a", font=("Segoe UI", 11))
+content_label.pack()
+
+# İçerik kutusu
+content_text = tk.Text(root, height=10, width=50, bg="white", fg="#3e3e3e", font=("Segoe UI", 10))
 content_text.pack()
 
-# Kaydet butonu
-tk.Button(root, text="💾 Kaydet", command=save_note,
-          bg="#ff6f61", fg="white", font=("Segoe UI", 10), padx=10, pady=5).pack(pady=10)
+# Kaydet butonu (isimli)
+save_button = tk.Button(root, text="💾 Kaydet", command=save_note,
+                        bg="#ff6f61", fg="white", font=("Segoe UI", 10), padx=10, pady=5)
+save_button.pack(pady=10)
 
-# Notları listeleme butonu
-tk.Button(root, text="📋 Notları Görüntüle", command=show_notes,
-          bg="#4dabf7", fg="white", font=("Segoe UI", 10), padx=10, pady=5).pack(pady=5)
+# Notları görüntüle butonu (isimli)
+show_button = tk.Button(root, text="📋 Notları Görüntüle", command=show_notes,
+                        bg="#4dabf7", fg="white", font=("Segoe UI", 10), padx=10, pady=5)
+show_button.pack(pady=5)
 
+# Tema değiştir butonu
+theme_button = tk.Button(root, text="🌙 Koyu Tema", command=toggle_theme,
+                         bg="#555", fg="white", font=("Segoe UI", 10))
+theme_button.pack(pady=5)
 
 
 root.mainloop()  # Arayüzü çalıştır
